@@ -1,0 +1,53 @@
+{
+  "name": "lambda-serverless-boilerplate",
+  "version": "2.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "stg:info": "serverless info --stage stg",
+    "stg:deploy": "serverless deploy --stage stg",
+    "stg:func:logs": "serverless logs function -f FUNCTIONNAME --tail --stage stg",
+    "stg:func:deploy": "serverless deploy function -f FUNCTIONNAME --stage stg",
+    "stg:func:invoke": "serverless invoke --log -f FUNCTIONNAME -p dummy_payload/basic.json --stage stg",
+    "prod:info": "serverless info --stage prod",
+    "prod:deploy": "serverless deploy --stage prod",
+    "prod:func:logs": "serverless logs function -f FUNCTIONNAME --tail --stage prod",
+    "prod:func:deploy": "serverless deploy function -f FUNCTIONNAME --stage prod",
+    "prod:func:invoke": "serverless invoke --log -f FUNCTIONNAME -p dummy_payload/basic.json --stage prod",
+    "test": "LOG_LEVEL=fatal ./node_modules/.bin/jest --config ./jest.config.js",
+    "test:watch": "LOG_LEVEL=fatal ./node_modules/.bin/jest --config ./jest.config.js --watch",
+    "prettier": "prettier --write \"**/*.{js,json,md}\"",
+    "lint:js": "eslint .",
+    "lint:js:fix": "eslint --fix ."
+  },
+  "author": "eumpek@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "pino": "^5.14.0",
+    "serverless-plugin-aws-alerts": "^1.4.0",
+    "serverless-pseudo-parameters": "^2.5.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-security": "^1.4.0",
+    "husky": "^3.0.9",
+    "jest": "^24.9.0",
+    "jest-teamcity-reporter": "^0.9.0",
+    "lint-staged": "^9.4.2",
+    "prettier": "^1.18.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run test"
+    }
+  },
+  "lint-staged": {
+    "**/*.{js,json,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  }
+}

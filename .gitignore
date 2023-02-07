@@ -1,0 +1,17 @@
+# Logs
+*.log
+
+# Dependency directories
+node_modules
+
+# Serverless directories
+.serverless
+
+# IDE
+infrastructure/.idea
+
+# Ansible
+infrastructure/*.retry
+
+# Python byte code
+infrastructure/*.pyc
