@@ -1,0 +1,10 @@
+---
+
+- name: Creating ssm parameter {{param_name}}
+  aws_ssm_parameter_store:
+    region: '{{aws_default_region}}'
+    name: '{{param_name}}'
+    description: '{{description}}'
+    value: '{{param_value}}'
+    key_id: '{{key_id | default(omit) }}'
+    string_type: '{{string_type | default("String") }}'

@@ -1,0 +1,16 @@
+---
+- name: Create TagCloud Escenic 6 Article Ingester Stack
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  pre_tasks:
+    - fail: msg="Specify an environment (test, stg, prod)"
+      when: env == ""
+    - include_vars: 'environment_vars/{{env}}.yml'
+    - include_vars: 'environment_vars/{{env}}.vault.yml'
+  roles:
+    - role: create-ssm-param
+      vars:
+        param_name: '/escenic-cue-live-api/cook/host'
+        description: ''
+        param_value: '{{cook_host}}'

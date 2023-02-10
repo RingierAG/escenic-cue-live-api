@@ -1,71 +1,34 @@
 {
   "root": true,
-  "parser": "babel-eslint",
-  "extends": [
-    "plugin:import/errors",
-    "plugin:import/warnings",
-    "eslint:recommended"
-  ],
-  "plugins": ["import", "security"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prefer-arrow"],
   "env": {
-    "jest": true,
     "node": true,
     "es6": true
   },
-  "parserOptions": {
-    "ecmaVersion": 6
-  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jest/recommended",
+    "plugin:jest/style",
+    "plugin:prettier/recommended"
+  ],
+  "overrides": [
+    {
+      "files": ["**/__tests__/**/*.[jt]s?(x)"],
+      "rules": {
+        "@typescript-eslint/no-non-null-assertion": "off"
+      }
+    }
+  ],
   "rules": {
-    "no-unused-vars": 1,
-    "comma-dangle": 0,
-    "generator-star-spacing": ["error", "after"],
-    "import/default": 2,
-    "import/export": 2,
-    "import/exports-last": 2,
-    "import/first": 2,
-    "import/named": 2,
-    "import/namespace": 2,
-    "import/newline-after-import": 1,
-    "import/no-absolute-path": 2,
-    "import/no-duplicates": 2,
-    "import/no-named-as-default": 0,
-    "import/no-extraneous-dependencies": [
-      "error",
+    "prefer-arrow/prefer-arrow-functions": [
+      "warn",
       {
-        "devDependencies": [
-          "**/*/*.spec.js",
-          "**/*/__tests__/*",
-          "**/*/tests/*",
-          "scripts/**/*.js"
-        ],
-        "peerDependencies": true
+        "disallowPrototype": true,
+        "singleReturnOnly": false,
+        "classPropertiesAllowed": false
       }
-    ],
-    "import/no-self-import": 2,
-    "import/no-unresolved": 2,
-    "import/order": [
-      "error",
-      {
-        "groups": [["builtin", "external"]]
-      }
-    ],
-    "indent": 0,
-    "no-console": 1,
-    "no-extra-boolean-cast": 0,
-    "no-throw-literal": "error",
-    "prefer-promise-reject-errors": "error",
-    "no-useless-return": 0,
-    "no-use-before-define": [
-      "error",
-      {
-        "functions": true,
-        "classes": true
-      }
-    ],
-    "react/prop-types": 0,
-    "semi": 0,
-    "space-before-function-paren": 0,
-    "standard/computed-property-even-spacing": 0
-  },
-  "globals": {}
+    ]
+  }
 }
