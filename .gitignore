@@ -15,3 +15,23 @@ infrastructure/*.retry
 
 # Python byte code
 infrastructure/*.pyc
+
+# yarn
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+yarn-error.log
+
+
+.build
+report
+build
+.env
+.dynamodb
+.webpack
+.eslintcache
+.idea

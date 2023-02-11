@@ -1,41 +1,65 @@
+import { deleteEntry, putItem } from '../services/dynamodb';
 import { Cook } from '../helpers/cook';
 
-interface CueLiveCookEntry {
-  id: number;
-  author?: Object;
-  creator?: Object;
-
-  creationDate?: Date;
-
-  publishDate?: Date;
-
-  lastModifiedDate?: Date;
-
-  values?: Array<Object>;
-
-  self?: String;
-
-  state?: String;
-
-  tags?: Array<Object>;
-
-  sticky?: Boolean;
-
-  editable?: Boolean;
+export interface CueLiveEntryFromCook {
+  values: Array<Object>;
 }
+export class CueLiveEntry {
+  // Dynamo Table's Composite Sort Key
+  publishDateId: string;
 
-export class CueLiveEntry implements CueLiveCookEntry {
-  id: number;
-  eventId: number;
-
-  constructor(id: number, eventId: number) {
-    this.id = id;
-    this.eventId = eventId;
+  constructor(
+    public id: number,
+    public eventId: number,
+    public author: Object,
+    public creator: Object,
+    public creationDate: number,
+    public publishDate: number,
+    public lastModifiedDate: number,
+    public eTag: string,
+    public state: string,
+    public tags: Array<Object>,
+    public sticky: Boolean,
+    public editable: Boolean,
+    public deletable: Boolean,
+    public values?: Array<Object>
+  ) {
+    this.publishDateId = `${publishDate}#${id}`;
   }
 
-  public async init(): Promise<void> {
-    const data: CueLiveCookEntry = await Cook.getEntryBody(this.id);
+  static fromObject(entry: CueLiveEntry): CueLiveEntry {
+    return new CueLiveEntry(
+      entry.id,
+      entry.eventId,
+      entry.author,
+      entry.creator,
+      new Date(entry.creationDate).getTime(),
+      new Date(entry.publishDate).getTime(),
+      new Date(entry.lastModifiedDate).getTime(),
+      entry.eTag,
+      entry.state,
+      entry.tags,
+      entry.sticky,
+      entry.editable,
+      entry.deletable,
+      entry.values
+    );
+  }
 
-    Object.assign(this, data);
+  public isLive(): boolean {
+    return this.state === 'published' && this.publishDate < Date.now();
+  }
+
+  public async fetchBodyFromCook(): Promise<void> {
+    const { values } = await Cook.fetchEntryBody(this.id);
+    this.values = values;
+  }
+
+  public save(): Promise<void> {
+    if (this.isLive()) {
+      return putItem(this);
+    }
+
+    return deleteEntry(this.eventId, this.id);
   }
 }

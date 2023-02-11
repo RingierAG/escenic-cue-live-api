@@ -1,0 +1,7 @@
+{
+  "Records": [
+    {
+      "body": "{\"req_id\":2,\"cueLiveEntry\":{\"eventId\":18283497,\"id\":4,\"author\":{\"value\":\"unitb Administrator\",\"origin\":\"https://ece.test.escenic.blick.ch/live-center-editorial/person/696\",\"avatar\":\"https://ece.test.escenic.blick.ch/live-center-editorial/person/696/avatar\"},\"creator\":{\"value\":\"unitb Administrator\",\"origin\":\"https://ece.test.escenic.blick.ch/live-center-editorial/person/696\",\"avatar\":\"https://ece.test.escenic.blick.ch/live-center-editorial/person/696/avatar\"},\"creationDate\":\"2023-02-08T11:51:58.000+0000\",\"lastModifiedDate\":\"2023-02-08T11:51:58.000+0000\",\"eTag\":\"f3aa8a3e-29ab-4d01-85ce-d214f17b51f7\",\"event\":\"https://ece.test.escenic.blick.ch/live-center-editorial/event/18283497\",\"publishDate\":\"2023-02-08T11:51:58.000+0000\",\"state\":\"draft\",\"tags\":[],\"sticky\":false,\"editable\":false,\"deletable\":false}}"
+    }
+  ]
+}

@@ -11,14 +11,15 @@ const log = Logger.getLogger({
 import { CueLiveEntryQueueRecord } from '../models/sqs-records';
 import { respondSuccess } from '../utils/respond';
 import { CueLiveEntry } from '../models/cueLiveEntry';
+import { putItem } from '../services/dynamodb';
+import { Cook } from '../helpers/cook';
 
 const processSQSRecord = async (record: CueLiveEntryQueueRecord) => {
-  const { id, eventId, req_id } = record;
+  const cueLiveEntry = CueLiveEntry.fromObject(record.cueLiveEntry);
+  await cueLiveEntry.fetchBodyFromCook();
+  await cueLiveEntry.save();
 
-  const cueLiveEntry = new CueLiveEntry(id, eventId);
-  await cueLiveEntry.init();
-
-  log.info({ payload: { cueLiveEntry, req_id } }, 'event');
+  log.info({ payload: { cueLiveEntry, req_id: record.cueLiveEntry } }, 'event');
 
   return Promise.resolve();
 };

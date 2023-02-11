@@ -22,7 +22,7 @@ custom:
   dynamodb:
     # If you only want to use DynamoDB Local in some stages, declare them here
     stages:
-      - local
+      - test
     start:
       port: 8000
       inMemory: true
@@ -38,7 +38,7 @@ custom:
       test:
         sources:
           - table: ${self:custom.dynamodbTableName}
-            sources: [./dynamo-seed.json]
+            # sources: [./dynamo-seed.json]
 
   alerts:
     stages: # Optionally - select which stages to deploy alarms to
@@ -148,7 +148,7 @@ functions:
       Name: ${self:custom.prefix}-listener
       Project: ${self:custom.proj}
     environment:
-
+      QUEUE_HOST: !Ref Queue
       NODE_ENV: '${self:provider.stage}'
       LOG_LEVEL: debug
     events:
@@ -221,83 +221,38 @@ resources:
         QueueName: ${self:custom.queueName}-dlq
         MessageRetentionPeriod: 1209600 # 14 days
         VisibilityTimeout: 5
-    # DynamoDBTable:
-    #   Type: 'AWS::DynamoDB::Table'
-    #   DeletionPolicy: Retain
-    #   Properties:
-    #     AttributeDefinitions:
-    #       - AttributeName: 'type'
-    #         AttributeType: 'S'
-    #       - AttributeName: 'full_timestamp'
-    #         AttributeType: 'S'
-    #     KeySchema:
-    #       - AttributeName: 'type'
-    #         KeyType: 'HASH'
-    #       - AttributeName: 'full_timestamp'
-    #         KeyType: 'RANGE'
-    #     ProvisionedThroughput:
-    #       ReadCapacityUnits: '5'
-    #       WriteCapacityUnits: '1'
-    #     TableName: ${self:custom.dynamoTableName}
-    #     TimeToLiveSpecification:
-    #       AttributeName: 'expire_at'
-    #       Enabled: true
-    #     Tags: # Function specific tags
-    #       - Key: Environment
-    #         Value: ${self:custom.env}
-    #       - Key: Name
-    #         Value: ${self:custom.prefix}-${self:service}
-    #       - Key: Project
-    #         Value: ${self:custom.proj}
-    # ScalingRole:
-    #   Type: AWS::IAM::Role
-    #   Properties:
-    #     AssumeRolePolicyDocument:
-    #       Version: '2012-10-17'
-    #       Statement:
-    #         - Effect: 'Allow'
-    #           Principal:
-    #             Service:
-    #               - application-autoscaling.amazonaws.com
-    #           Action:
-    #             - 'sts:AssumeRole'
-    #     Path: '/'
-    #     Policies:
-    #       - PolicyName: ScalingIAMRolePolicy
-    #         PolicyDocument:
-    #           Version: '2012-10-17'
-    #           Statement:
-    #             - Effect: 'Allow'
-    #               Action:
-    #                 - 'dynamodb:DescribeTable'
-    #                 - 'dynamodb:UpdateTable'
-    #                 - 'cloudwatch:PutMetricAlarm'
-    #                 - 'cloudwatch:DescribeAlarms'
-    #                 - 'cloudwatch:GetMetricStatistics'
-    #                 - 'cloudwatch:SetAlarmState'
-    #                 - 'cloudwatch:DeleteAlarms'
-    #               Resource: '*'
-    # ReadScalingPolicy:
-    #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    #   Properties:
-    #     PolicyName: DynamoReadAutoScalingPolicy
-    #     PolicyType: TargetTrackingScaling
-    #     ScalingTargetId: !Ref ReadCapacityScalableTarget
-    #     TargetTrackingScalingPolicyConfiguration:
-    #       TargetValue: 90
-    #       ScaleInCooldown: 60
-    #       ScaleOutCooldown: 60
-    #       PredefinedMetricSpecification:
-    #         PredefinedMetricType: DynamoDBReadCapacityUtilization
-    # ReadCapacityScalableTarget:
-    #   Type: AWS::ApplicationAutoScaling::ScalableTarget
-    #   Properties:
-    #     MaxCapacity: 140
-    #     MinCapacity: 5
-    #     ResourceId: !Join
-    #       - /
-    #       - - table
-    #         - !Ref DynamoDBTable
-    #     RoleARN: !GetAtt ScalingRole.Arn
-    #     ScalableDimension: dynamodb:table:ReadCapacityUnits
-    #     ServiceNamespace: dynamodb
+
+    DynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:custom.dynamoTableName}
+        AttributeDefinitions:
+          - AttributeName: 'eventId'
+            AttributeType: 'N'
+          - AttributeName: 'id'
+            AttributeType: 'N'
+          - AttributeName: 'xj'
+            AttributeType: 'S'
+        KeySchema:
+          - AttributeName: 'eventId'
+            KeyType: 'HASH'
+          - AttributeName: 'publishDateId'
+            KeyType: 'RANGE'
+        LocalSecondaryIndexes:
+          - IndexName: byEntryId
+            KeySchema:
+              - AttributeName: eventId
+                KeyType: HASH
+              - AttributeName: id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        Tags: # Function specific tags
+          - Key: Environment
+            Value: ${self:custom.env}
+          - Key: Name
+            Value: ${self:custom.dynamoTableName}
+          - Key: Project
+            Value: ${self:custom.proj}

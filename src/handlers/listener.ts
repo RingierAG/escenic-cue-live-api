@@ -15,6 +15,7 @@ const log = Logger.getLogger({
   service: 'handler',
 });
 import { respondSuccess, respondFailure } from '../utils/respond';
+import { CueLiveEntry } from 'src/models/cueLiveEntry';
 
 /**
  * HTTP Request Handler
@@ -27,9 +28,20 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   withRequest(event, context);
   context.callbackWaitsForEmptyEventLoop = false;
 
-  const schema = Joi.object({
+  const schema = Joi.object<CueLiveEntry>({
     eventId: Joi.number().required(),
     id: Joi.number().required(),
+    author: Joi.object().required(),
+    creator: Joi.object().required(),
+    creationDate: Joi.string().required(),
+    publishDate: Joi.string().required(),
+    lastModifiedDate: Joi.string().required(),
+    eTag: Joi.string().required(),
+    state: Joi.string().required(),
+    tags: Joi.object().required(),
+    sticky: Joi.boolean().required(),
+    editable: Joi.boolean().required(),
+    deletable: Joi.boolean().required(),
   }).unknown();
 
   const req_id = context.awsRequestId;
@@ -40,8 +52,7 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
 
     const cueLiveEntryQueueRecord: CueLiveEntryQueueRecord = {
       req_id,
-      id: eventBody.id,
-      eventId: eventBody.eventId,
+      cueLiveEntry: eventBody,
     };
 
     log.info(

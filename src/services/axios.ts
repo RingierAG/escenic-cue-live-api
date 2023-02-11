@@ -39,24 +39,22 @@ export abstract class Axios {
     path: string,
     config: AxiosApiConfig
   ): Promise<ResponseType> {
+    const url = `${config.endpoint}${
+      config.pathPrefix ? config.pathPrefix : ''
+    }${path}`;
     try {
-      const response: AxiosResponse = await axios.get(
-        `${config.endpoint}${
-          config.pathPrefix ? config.pathPrefix : ''
-        }${path}`,
-        {
-          headers: config.headers,
-          timeout: config.timeout,
-        }
-      );
+      const response: AxiosResponse = await axios.get(url, {
+        headers: config.headers,
+        timeout: config.timeout,
+      });
       if (response.status !== 200) {
         throw new Error('Bad status from Cook');
       }
 
       return response.data;
     } catch (err) {
-      const error = new Error(`Axios - Error fetching ${path}`);
-      Object.assign(error, { cause: err, path, config });
+      const error = new Error(`Axios - Error fetching ${url}`);
+      Object.assign(error, { cause: err, url, config });
       throw error;
     }
   }

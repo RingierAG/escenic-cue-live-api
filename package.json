@@ -4,6 +4,7 @@
   "description": "",
   "main": "handler.js",
   "scripts": {
+    "test:listener:debug": "SLS_DEBUG=* sls offline start --stage test",
     "test:env": "ansible-playbook infrastructure/all.yml -e 'env=test' --vault-password-file=~/.vault_pass.txt",
     "test:info": "sls info --stage test",
     "test:deploy": "yarn test:env && sls deploy --stage test",
@@ -13,7 +14,7 @@
     "test:consumer:logs": "sls logs -f consumer --tail --stage test",
     "test:consumer:deploy": "sls deploy -f consumer --stage test",
     "test:consumer:invoke": "sls invoke --log -f consumer -p dummy_payload/basic.json --stage test",
-    "test:consumer:invoke:local": "sls invoke local -f consumer -p dummy_payload/consumer/entryUpdate.json -s test",
+    "test:consumer:invoke:local": "sls invoke local -f consumer -s test -p dummy_payload/consumer/entryUpdateDraft.json",
     "test": "LOG_LEVEL=fatal ./node_modules/.bin/jest --config ./jest.config.js",
     "test:watch": "LOG_LEVEL=fatal ./node_modules/.bin/jest --config ./jest.config.js --watch",
     "prettier": "prettier --write \"**/*.{js,json,md}\"",
@@ -22,7 +23,9 @@
   },
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.267.0",
     "@aws-sdk/client-sqs": "^3.266.1",
+    "@aws-sdk/util-dynamodb": "^3.267.0",
     "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
     "@types/aws-lambda": "^8.10.110",
     "@types/pino": "^7.0.5",
