@@ -1,1 +1,0 @@
-{"version":3,"file":"sqs.js","sourceRoot":"","sources":["../../../src/config/sqs.ts"],"names":[],"mappings":";;AAAA,MAAM,GAAG,GAAG,OAAO,CAAC,GAAG,CAAC;AAQxB,MAAM,SAAS,GAAc;IAC3B,MAAM,EAAE,GAAG,CAAC,UAAU,IAAI,cAAc;IACxC,QAAQ,EAAE,GAAG,CAAC,UAAU,IAAI,EAAE;IAC9B,iBAAiB,EAAE,GAAG,EAAE,oEAAoE;CAC7F,CAAC;AAEF,kBAAe,SAAS,CAAC"}
