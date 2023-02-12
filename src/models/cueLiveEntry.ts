@@ -1,3 +1,9 @@
+import { Logger } from '../utils/logger';
+
+const log = Logger.getLogger({
+  service: 'cueLiveEntry',
+});
+
 import { deleteEntry, putItem } from '../services/dynamodb';
 import { Cook } from '../helpers/cook';
 
@@ -27,8 +33,8 @@ export class CueLiveEntry {
     this.publishDateId = `${publishDate}#${id}`;
   }
 
-  static fromObject(entry: CueLiveEntry): CueLiveEntry {
-    return new CueLiveEntry(
+  static async init(entry: CueLiveEntry): Promise<CueLiveEntry> {
+    const cueLiveEntry = new CueLiveEntry(
       entry.id,
       entry.eventId,
       entry.author,
@@ -44,15 +50,21 @@ export class CueLiveEntry {
       entry.deletable,
       entry.values
     );
+
+    await cueLiveEntry.fetchBodyValuesFromCook();
+
+    return cueLiveEntry;
   }
 
   public isLive(): boolean {
     return this.state === 'published' && this.publishDate < Date.now();
   }
 
-  public async fetchBodyFromCook(): Promise<void> {
-    const { values } = await Cook.fetchEntryBody(this.id);
-    this.values = values;
+  public async fetchBodyValuesFromCook(): Promise<void> {
+    const data = await Cook.fetchEntryBody(this.id);
+    this.values = data.values;
+
+    log.info({ cueLiveEntry: this }, 'enrichedEvent');
   }
 
   public save(): Promise<void> {

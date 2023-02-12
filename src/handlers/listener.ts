@@ -31,17 +31,17 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   const schema = Joi.object<CueLiveEntry>({
     eventId: Joi.number().required(),
     id: Joi.number().required(),
-    author: Joi.object().required(),
-    creator: Joi.object().required(),
+    author: Joi.object(),
+    creator: Joi.object(),
     creationDate: Joi.string().required(),
     publishDate: Joi.string().required(),
     lastModifiedDate: Joi.string().required(),
-    eTag: Joi.string().required(),
+    eTag: Joi.string(),
     state: Joi.string().required(),
-    tags: Joi.object().required(),
+    tags: Joi.array().items(Joi.object()),
     sticky: Joi.boolean().required(),
-    editable: Joi.boolean().required(),
-    deletable: Joi.boolean().required(),
+    editable: Joi.boolean(),
+    deletable: Joi.boolean(),
   }).unknown();
 
   const req_id = context.awsRequestId;
@@ -56,16 +56,14 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
     };
 
     log.info(
-      { payload: cueLiveEntryQueueRecord, headers: event.headers },
-      'parsedEvent'
+      { cueLiveEntry: eventBody, headers: event.headers, req_id },
+      'eventParsed'
     );
-
     await queueAdd(cueLiveEntryQueueRecord);
 
     return await respondSuccess(cueLiveEntryQueueRecord);
   } catch (err) {
-    const error = new Error('Error parsing input');
-    Object.assign(error, { cause: err, payload: event, req_id });
-    return await respondFailure(error);
+    Object.assign(err, { payload: event, req_id });
+    return await respondFailure(err);
   }
 };

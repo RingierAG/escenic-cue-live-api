@@ -28,7 +28,10 @@ export const putItem = async (item: CueLiveEntry) => {
     await client.send(
       new PutItemCommand({
         TableName: config.dynamodb.tableName,
-        Item: marshall(item, { convertClassInstanceToMap: true }),
+        Item: marshall(item, {
+          convertClassInstanceToMap: true,
+          removeUndefinedValues: true,
+        }),
       })
     );
   } catch (err) {

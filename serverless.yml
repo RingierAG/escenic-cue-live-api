@@ -19,26 +19,26 @@ custom:
   dynamoTableName:
     ${self:custom.dynamodbTableName}
     # domains
-  dynamodb:
-    # If you only want to use DynamoDB Local in some stages, declare them here
-    stages:
-      - test
-    start:
-      port: 8000
-      inMemory: true
-      heapInitial: 200m
-      heapMax: 1g
-      migrate: true
-      convertEmptyValues: true
-    migration:
-      dir: dynamodbMigrations,
-      table_prefix: ''
-      table_suffix: ''
-    seed:
-      test:
-        sources:
-          - table: ${self:custom.dynamodbTableName}
-            # sources: [./dynamo-seed.json]
+  # dynamodb:
+  #   # If you only want to use DynamoDB Local in some stages, declare them here
+  #   stages:
+  #     - test
+  #   start:
+  #     port: 8000
+  #     inMemory: true
+  #     heapInitial: 200m
+  #     heapMax: 1g
+  #     migrate: true
+  #     convertEmptyValues: true
+  #   migration:
+  #     dir: dynamodbMigrations,
+  #     table_prefix: ''
+  #     table_suffix: ''
+  #   seed:
+  #     test:
+  #       sources:
+  #         - table: ${self:custom.dynamodbTableName}
+  #           # sources: [./dynamo-seed.json]
 
   alerts:
     stages: # Optionally - select which stages to deploy alarms to
@@ -107,6 +107,7 @@ provider:
             - dynamodb:Scan
             - dynamodb:GetItem
             - dynamodb:PutItem
+            - dynamodb:DeleteItem
           Resource: '*'
         - Effect: Allow
           Action:
@@ -232,7 +233,7 @@ resources:
             AttributeType: 'N'
           - AttributeName: 'id'
             AttributeType: 'N'
-          - AttributeName: 'xj'
+          - AttributeName: 'publishDateId'
             AttributeType: 'S'
         KeySchema:
           - AttributeName: 'eventId'

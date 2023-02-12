@@ -1,4 +1,5 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
+import { ValidationError } from 'joi';
 import { Logger } from './logger';
 
 const log = Logger.getLogger({
@@ -9,8 +10,13 @@ export const respondFailure = async (
   error: unknown,
   code?: number
 ): Promise<APIGatewayProxyResult> => {
-  const statusCode = code || 500;
-  const errors: Array<string> = ['Internal server error'];
+  let statusCode = 500;
+  let errors: Array<string> = ['Internal server error'];
+
+  if (error instanceof ValidationError) {
+    statusCode = 422;
+    errors = error.details.map((detail) => detail.message);
+  }
 
   const response = {
     statusCode,
