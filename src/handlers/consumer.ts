@@ -13,7 +13,8 @@ import { respondSuccess } from '../utils/respond';
 import { CueLiveEntry } from '../models/cueLiveEntry';
 
 const processSQSRecord = async (record: CueLiveEntryQueueRecord) => {
-  const cueLiveEntry = await CueLiveEntry.init(record.cueLiveEntry);
+  const cueLiveEntry = await CueLiveEntry.fromObject(record.cueLiveEntry);
+  await cueLiveEntry.fetchBodyValuesFromCook();
   await cueLiveEntry.save();
 
   log.info({ cueLiveEntry, req_id: record.req_id }, 'eventSaved');

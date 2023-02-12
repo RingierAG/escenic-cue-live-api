@@ -1,8 +1,8 @@
+import AWSXRay from 'aws-xray-sdk';
 import {
   DeleteItemCommand,
   DynamoDBClient,
   DynamoDBClientConfig,
-  GetItemCommand,
   PutItemCommand,
   QueryCommand,
 } from '@aws-sdk/client-dynamodb'; // ES6 import
@@ -18,10 +18,10 @@ const params: DynamoDBClientConfig = {
 // Serverless offline env variable
 // Access local dynamodb when debugging
 if (process.env.IS_OFFLINE) {
-  params.region = 'localhost';
-  params.endpoint = 'http://localhost:8000';
+  // params.region = 'localhost';
+  // params.endpoint = 'http://localhost:8000';
 }
-const client = new DynamoDBClient(params);
+const client = AWSXRay.captureAWSv3Client(new DynamoDBClient(params));
 
 export const putItem = async (item: CueLiveEntry) => {
   try {
@@ -39,6 +39,60 @@ export const putItem = async (item: CueLiveEntry) => {
       `Error putting item in DynamoDB ${config.dynamodb.tableName}`
     );
     Object.assign(error, { cause: err, item });
+    throw error;
+  }
+};
+
+export const getEntries = async (
+  eventId: number,
+  before?: number,
+  after?: number,
+  limit = config.dynamodb.limit
+) => {
+  // Due to the limitation of the current DynamoDB schema
+  // it's not possible to filter out pinned entries during query time
+  // as a result, on every query we account for limit for  #limit+maxPinnedEntries
+  // which will be then filtered out.
+
+  let KeyConditionExpression = 'eventId = :eventId';
+  const attributesValues: any = {
+    ':eventId': eventId,
+  };
+
+  if (after && !before) {
+    KeyConditionExpression += ` and publishDateId > :after`;
+    attributesValues[':after'] = after;
+  } else if (!after && before) {
+    KeyConditionExpression += ` and publishDateId < :before`;
+    attributesValues[':before'] = before;
+  } else if (after && before) {
+    KeyConditionExpression += ` and publishDateId between :before AND :after`;
+    attributesValues[':before'] = before;
+    attributesValues[':after'] = before;
+  }
+
+  try {
+    console.log(marshall(attributesValues), KeyConditionExpression);
+    const results = await client.send(
+      new QueryCommand({
+        TableName: config.dynamodb.tableName,
+        KeyConditionExpression,
+        ScanIndexForward: false,
+        ExpressionAttributeValues: marshall(attributesValues),
+        Limit: limit + config.dynamodb.maxPinnedEntries,
+      })
+    );
+
+    return results?.Items?.length ? results.Items.map(unmarshall) : [];
+  } catch (err) {
+    const error = new Error(
+      `Error fetching entriesfrom DynamoDB ${config.dynamodb.tableName}`
+    );
+    Object.assign(error, {
+      cause: err,
+      KeyConditionExpression,
+      eventId,
+    });
     throw error;
   }
 };

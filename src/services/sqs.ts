@@ -1,3 +1,4 @@
+import AWSXRay from 'aws-xray-sdk';
 import {
   SQSClient,
   SendMessageCommand,

@@ -33,7 +33,13 @@ export class CueLiveEntry {
     this.publishDateId = `${publishDate}#${id}`;
   }
 
-  static async init(entry: CueLiveEntry): Promise<CueLiveEntry> {
+  /**
+   *
+   * @param entry - Object with CueLiveEntry props but not an instance of the class
+   * @param fetchBodyValuesFromCook - Flag to indicate whether to fetch the entry body from Cook
+   * @returns
+   */
+  static fromObject(entry: CueLiveEntry): CueLiveEntry {
     const cueLiveEntry = new CueLiveEntry(
       entry.id,
       entry.eventId,
@@ -50,8 +56,6 @@ export class CueLiveEntry {
       entry.deletable,
       entry.values
     );
-
-    await cueLiveEntry.fetchBodyValuesFromCook();
 
     return cueLiveEntry;
   }

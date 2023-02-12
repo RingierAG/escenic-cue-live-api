@@ -1,7 +1,27 @@
 {
   "Records": [
     {
-      "body": "{\"req_id\":2,\"cueLiveEntry\":{\"eventId\":18283497,\"lastModifiedDate\":\"Sun Feb 12 13:42:37 GMT 2023\",\"sticky\":false,\"publishDate\":\"Sun Feb 12 13:42:37 GMT 2023\",\"id\":15,\"state\":\"published\",\"creationDate\":\"Sun Feb 12 13:42:37 GMT 2023\"}}"
+      "body": "{\"req_id\":2,\"cueLiveEntry\":{\"eventId\":18283497,\"lastModifiedDate\":\"Sun Feb 12 13:42:37 GMT 2023\",\"sticky\":false,\"publishDate\":\"Sun Feb 12 13:42:37 GMT 2023\",\"id\":15,\"state\":\"published\",\"creationDate\":\"Sun Feb 12 13:42:37 GMT 2023\"}}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "AWSTraceHeader": "Root=1-63e91ef9-50913b0918d2d6ec425b5cd0;Parent=f60a769bcbf66d45;Sampled=1",
+        "SentTimestamp": "1676222201536",
+        "SenderId": "AROAUVLOXSSHK7JJ66ZIB:test-ece-escenic-cue-live-api-listener",
+        "ApproximateFirstReceiveTimestamp": "1676222201542"
+      },
+      "messageAttributes": {
+        "x-correlation-id": {
+          "stringValue": "794739ab-6b2b-4647-95c1-7b7de94169a3",
+          "stringListValues": [],
+          "binaryListValues": [],
+          "dataType": "String"
+        }
+      },
+      "md5OfBody": "aca32c847b43ac7b65720229c94bbf9e",
+      "md5OfMessageAttributes": "fac67bf4d1b9522abe0da980d95bf036",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:eu-central-1:320744166542:test-ece-escenic-cue-live-api",
+      "awsRegion": "eu-central-1"
     }
   ]
 }

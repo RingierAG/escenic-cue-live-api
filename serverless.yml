@@ -169,31 +169,19 @@ functions:
     environment:
       STAGE: ${self:provider.stage}
       BLICK_COOK_ENDPOINT: ${ssm:/escenic-cue-live-api/cook/host}
-
+  fetcher:
+    name: ${self:custom.prefix}-fetcher
+    description: 'The lambda function serves as an API for the FrontEnds'
+    handler: src/handlers/fetcher.handler
+    timeout: 5 # Timeout for this specific function.  Overrides the default set above.
+    tags: # Function specific tags
+      Environment: ${self:provider.stage}
+      Name: ${self:custom.prefix}-fetcher
+      Project: ${self:custom.proj} 
     events:
-      - sqs:
-          arn: !GetAtt Queue.Arn
-          batchSize: 1 # Use 1 to simplify how we handle the errors
-  # thumbnail:
-  #   name: ${self:custom.prefix}-blicktv-chapters-image-upload-lambda
-  #   description: 'The lambda function is triggered by S3 and uploads the chapters thumbnails to NetStorage'
-  #   handler: producer.lambdaImageHandler
-  #   memorySize: 128 # Overwrite the default memory size. Default is 1024
-  #   timeout: 180 # The default is 6 seconds. Note: API Gateway current maximum is 30 seconds
-  #   tags: # Function specific tags
-  #     Environment: ${self:provider.stage}
-  #     Name: ${self:custom.prefix}-blicktv-chapters-image-upload-lambda
-  #     Project: ${self:custom.proj}
-  #   environment:
-  #     STAGE: ${self:provider.stage}
-  #     NODE_ENV: '${self:provider.stage}'
-  #     LOG_LEVEL: debug
-  #     BLICK_CHAPTERS_TABLE_NAME: ${self:custom.dynamoTableName}
-  #     BLICK_CHAPTERS_BUCKET_NAME: ${self:custom.bucketName}
-  #     BLICK_CHAPTERS_AKAMAI_NETSTORAGE_HOST: ${ssm:/chapters-lambda/akamai/netstorage/host}
-  #     BLICK_CHAPTERS_AKAMAI_NETSTORAGE_USER: ${ssm:/chapters-lambda/akamai/netstorage/user}
-  #     BLICK_CHAPTERS_AKAMAI_NETSTORAGE_KEY: ${ssm:/chapters-lambda/akamai/netstorage/key}
-  #     BLICK_CHAPTERS_AKAMAI_NETSTORAGE_CP_CODE: ${ssm:/chapters-lambda/akamai/netstorage/cpCode}
+      - http:
+          path: '/entries/{eventId}'
+          method: get
 
 resources:
   Resources:
