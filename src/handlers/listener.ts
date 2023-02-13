@@ -33,8 +33,8 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
     id: Joi.number().required(),
     author: Joi.object(),
     creator: Joi.object(),
-    creationDate: Joi.string().required(),
-    publishDate: Joi.string().required(),
+    createdDate: Joi.string().required(),
+    publishedDate: Joi.string().required(),
     lastModifiedDate: Joi.string().required(),
     eTag: Joi.string(),
     state: Joi.string().required(),
@@ -42,6 +42,8 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
     sticky: Joi.boolean().required(),
     editable: Joi.boolean(),
     deletable: Joi.boolean(),
+    body: Joi.string(),
+    title: Joi.string(),
   }).unknown();
 
   const req_id = context.awsRequestId;

@@ -161,7 +161,7 @@ functions:
     name: ${self:custom.prefix}-consumer
     description: 'The lambda function consumes SQS and transforms CUE Live entries by calling Cook'
     handler: src/handlers/consumer.handler
-    timeout: 5 # Timeout for this specific function.  Overrides the default set above.
+    timeout: 15 # Timeout for this specific function.  Overrides the default set above.
     tags: # Function specific tags
       Environment: ${self:provider.stage}
       Name: ${self:custom.prefix}-consumer
@@ -169,6 +169,11 @@ functions:
     environment:
       STAGE: ${self:provider.stage}
       BLICK_COOK_ENDPOINT: ${ssm:/escenic-cue-live-api/cook/host}
+    events:
+      - sqs:
+          arn: !GetAtt Queue.Arn
+          batchSize: 1 # Use 1 to simplify how we handle the errors
+
   fetcher:
     name: ${self:custom.prefix}-fetcher
     description: 'The lambda function serves as an API for the FrontEnds'
@@ -181,6 +186,9 @@ functions:
     events:
       - http:
           path: '/entries/{eventId}'
+          method: get
+      - http:
+          path: '/entry/{eventId}/{id}'
           method: get
 
 resources:
@@ -221,12 +229,12 @@ resources:
             AttributeType: 'N'
           - AttributeName: 'id'
             AttributeType: 'N'
-          - AttributeName: 'publishDateId'
+          - AttributeName: 'sticky-publishedDate-id'
             AttributeType: 'S'
         KeySchema:
           - AttributeName: 'eventId'
             KeyType: 'HASH'
-          - AttributeName: 'publishDateId'
+          - AttributeName: 'sticky-publishedDate-id'
             KeyType: 'RANGE'
         LocalSecondaryIndexes:
           - IndexName: byEntryId

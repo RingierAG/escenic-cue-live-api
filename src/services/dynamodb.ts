@@ -36,7 +36,7 @@ export const putItem = async (item: CueLiveEntry) => {
     );
   } catch (err) {
     const error = new Error(
-      `Error putting item in DynamoDB ${config.dynamodb.tableName}`
+      `Error putting item in DynamoDB's ${config.dynamodb.tableName}`
     );
     Object.assign(error, { cause: err, item });
     throw error;
@@ -45,31 +45,27 @@ export const putItem = async (item: CueLiveEntry) => {
 
 export const getEntries = async (
   eventId: number,
-  before?: number,
-  after?: number,
+  before?: string,
+  after?: string,
+  sticky: boolean = false,
   limit = config.dynamodb.limit
-) => {
-  // Due to the limitation of the current DynamoDB schema
-  // it's not possible to filter out pinned entries during query time
-  // as a result, on every query we account for limit for  #limit+maxPinnedEntries
-  // which will be then filtered out.
+): Promise<Array<CueLiveEntry>> => {
+  if (sticky) {
+    before = before ? `1#${before}` : '2#';
+    after = after ? `1#${after}` : '1#';
+  } else {
+    before = before ? `0#${before}` : '1#';
+    after = after ? `0#${after}` : '0#';
+  }
 
-  let KeyConditionExpression = 'eventId = :eventId';
+  let KeyConditionExpression = '#pk = :eventId';
   const attributesValues: any = {
     ':eventId': eventId,
   };
 
-  if (after && !before) {
-    KeyConditionExpression += ` and publishDateId > :after`;
-    attributesValues[':after'] = after;
-  } else if (!after && before) {
-    KeyConditionExpression += ` and publishDateId < :before`;
-    attributesValues[':before'] = before;
-  } else if (after && before) {
-    KeyConditionExpression += ` and publishDateId between :before AND :after`;
-    attributesValues[':before'] = before;
-    attributesValues[':after'] = before;
-  }
+  KeyConditionExpression += ` and #sk between :after AND :before`;
+  attributesValues[':before'] = before;
+  attributesValues[':after'] = after;
 
   try {
     console.log(marshall(attributesValues), KeyConditionExpression);
@@ -79,14 +75,22 @@ export const getEntries = async (
         KeyConditionExpression,
         ScanIndexForward: false,
         ExpressionAttributeValues: marshall(attributesValues),
-        Limit: limit + config.dynamodb.maxPinnedEntries,
+        ExpressionAttributeNames: {
+          '#pk': 'eventId',
+          '#sk': 'sticky-publishedDate-id',
+        },
+        Limit: limit,
       })
     );
 
-    return results?.Items?.length ? results.Items.map(unmarshall) : [];
+    return results?.Items?.length
+      ? (results.Items.map(unmarshall) as Array<CueLiveEntry>).map(
+          CueLiveEntry.fromObject
+        )
+      : [];
   } catch (err) {
     const error = new Error(
-      `Error fetching entriesfrom DynamoDB ${config.dynamodb.tableName}`
+      `Error fetching entries from DynamoDB's ${config.dynamodb.tableName}`
     );
     Object.assign(error, {
       cause: err,
@@ -97,7 +101,10 @@ export const getEntries = async (
   }
 };
 
-export const getEntry = async (eventId: number, id: number) => {
+export const getEntry = async (
+  eventId: number,
+  id: number
+): Promise<CueLiveEntry | undefined> => {
   const results = await client.send(
     new QueryCommand({
       TableName: config.dynamodb.tableName,
@@ -126,7 +133,7 @@ export const deleteEntry = async (eventId: number, id: number) => {
         TableName: config.dynamodb.tableName,
         Key: marshall({
           eventId: cueLiveEntry.eventId,
-          publishDateId: cueLiveEntry.publishDateId,
+          'sticky-publishedDate-id': cueLiveEntry['sticky-publishedDate-id'],
         }),
       })
     );

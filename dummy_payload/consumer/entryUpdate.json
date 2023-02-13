@@ -1,7 +1,7 @@
 {
   "Records": [
     {
-      "body": "{\"req_id\":2,\"cueLiveEntry\":{\"eventId\":18283497,\"lastModifiedDate\":\"Sun Feb 12 13:42:37 GMT 2023\",\"sticky\":false,\"publishDate\":\"Sun Feb 12 13:42:37 GMT 2023\",\"id\":15,\"state\":\"published\",\"creationDate\":\"Sun Feb 12 13:42:37 GMT 2023\"}}",
+      "body": "{\"req_id\":\"77ad9dfe-b585-43a9-b097-d899fecd5b27\",\"cueLiveEntry\":{\"eventId\":18283698,\"createdDate\":\"2023-02-13 17:33:19.0\",\"lastModifiedDate\":\"Mon Feb 13 17:38:21 GMT 2023\",\"sticky\":false,\"eTag\":\"35f52c19-14ae-431a-b4b6-c6a970db6d95\",\"id\":38,\"publishedDate\":\"2023-02-13 17:33:19.0\",\"state\":\"deleted\",\"title\":\"Test 1\",\"body\":\"<p>Test 1</p>\"}}",
       "attributes": {
         "ApproximateReceiveCount": "1",
         "AWSTraceHeader": "Root=1-63e91ef9-50913b0918d2d6ec425b5cd0;Parent=f60a769bcbf66d45;Sampled=1",

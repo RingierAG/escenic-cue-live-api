@@ -3,7 +3,6 @@ export interface DynamoDBConfig {
   readonly region: string;
   readonly tableName: string;
   readonly limit: number;
-  readonly maxPinnedEntries: number;
 }
 
 const dynamoDBConfig: DynamoDBConfig = {
@@ -12,7 +11,6 @@ const dynamoDBConfig: DynamoDBConfig = {
     env.BLICK_ESCENIC_CUE_LIVE_ENTRIES_TABLE_NAME ||
     'local-escenic-escenic-cue-live-api-entries-table',
   limit: 10,
-  maxPinnedEntries: 10,
 };
 
 export default dynamoDBConfig;

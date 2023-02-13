@@ -12,14 +12,20 @@ const log = Logger.getLogger({
   service: 'handler',
 });
 import { respondSuccess, respondFailure } from '../utils/respond';
-import * as dynamodb from '../services/dynamodb';
+import { EntryController } from '../controllers/entry';
 
-const schema = Joi.object({
-  eventId: Joi.number().required(),
-  before: Joi.string(),
-  after: Joi.string(),
-  limit: Joi.number(),
-}).unknown();
+const schemas = {
+  entries: Joi.object({
+    eventId: Joi.number().required(),
+    before: Joi.string(),
+    after: Joi.string(),
+    limit: Joi.number(),
+  }).unknown(),
+  entry: Joi.object({
+    eventId: Joi.number().required(),
+    id: Joi.number().required(),
+  }).unknown(),
+};
 
 /**
  * HTTP Request Handler
@@ -33,13 +39,21 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
   const req_id = context.awsRequestId;
+
   try {
-    const { before, after, limit, eventId } = await schema.validateAsync({
+    const reqType = event.path.split('/')[1];
+    let schema = reqType === 'entries' ? schemas.entries : schemas.entry;
+    const { before, after, limit, eventId, id } = await schema.validateAsync({
       ...event.queryStringParameters,
       ...event.pathParameters,
     });
 
-    const cueLiveEntries = await dynamodb.getEntries(
+    if (reqType == 'entry' && id) {
+      const entry = await EntryController.fetchEntry(eventId, id);
+      return await respondSuccess(entry);
+    }
+
+    const cueLiveEntries = await EntryController.fetchEntries(
       eventId,
       before,
       after,

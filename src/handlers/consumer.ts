@@ -10,12 +10,10 @@ const log = Logger.getLogger({
 });
 import { CueLiveEntryQueueRecord } from '../models/sqs-records';
 import { respondSuccess } from '../utils/respond';
-import { CueLiveEntry } from '../models/cueLiveEntry';
+import { EntryController } from '../controllers/entry';
 
 const processSQSRecord = async (record: CueLiveEntryQueueRecord) => {
-  const cueLiveEntry = await CueLiveEntry.fromObject(record.cueLiveEntry);
-  await cueLiveEntry.fetchBodyValuesFromCook();
-  await cueLiveEntry.save();
+  const cueLiveEntry = await EntryController.processEntryFromSQS(record);
 
   log.info({ cueLiveEntry, req_id: record.req_id }, 'eventSaved');
 
