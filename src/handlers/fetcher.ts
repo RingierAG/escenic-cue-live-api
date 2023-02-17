@@ -17,9 +17,9 @@ import { EntryController } from '../controllers/entry';
 const schemas = {
   entries: Joi.object({
     eventId: Joi.number().required(),
-    before: Joi.string(),
-    after: Joi.string(),
-    limit: Joi.number(),
+    before: Joi.string().base64(),
+    after: Joi.string().base64(),
+    limit: Joi.number().default(config.dynamodb.limit),
   }).unknown(),
   entry: Joi.object({
     eventId: Joi.number().required(),
@@ -42,11 +42,18 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
 
   try {
     const reqType = event.path.split('/')[1];
+    if (reqType == 'test') {
+      return await respondSuccess({});
+    }
+
     let schema = reqType === 'entries' ? schemas.entries : schemas.entry;
-    const { before, after, limit, eventId, id } = await schema.validateAsync({
+    let { before, after, limit, eventId, id } = await schema.validateAsync({
       ...event.queryStringParameters,
       ...event.pathParameters,
     });
+
+    before = before ? Buffer.from(before, 'base64').toString() : undefined;
+    after = after ? Buffer.from(after, 'base64').toString() : undefined;
 
     if (reqType == 'entry' && id) {
       const entry = await EntryController.fetchEntry(eventId, id);

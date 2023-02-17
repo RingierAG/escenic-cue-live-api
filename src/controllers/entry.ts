@@ -4,6 +4,7 @@ const log = Logger.getLogger({
   service: 'cueLiveEntryController',
 });
 
+import config from '../config';
 import * as dynamodb from '../services/dynamodb';
 import { CueLiveEntriesResponse, CueLiveEntry } from '../models/cueLiveEntry';
 import { CueLiveEntryQueueRecord } from '../models/sqs-records';
@@ -12,11 +13,11 @@ import { Cook } from '../helpers/cook';
 export class EntryController {
   static async fetchEntries(
     eventId: number,
-    before?: string,
-    after?: string,
-    limit?: number
+    before: string,
+    after: string,
+    limit: number
   ): Promise<CueLiveEntriesResponse> {
-    const cueLiveNonStickyEntries = await dynamodb.getEntries(
+    let cueLiveNonStickyEntries = await dynamodb.getEntries(
       eventId,
       before,
       after,
@@ -26,15 +27,53 @@ export class EntryController {
 
     const cueLiveStickyEntries = await dynamodb.getEntries(
       eventId,
-      before,
-      after,
+      undefined,
+      undefined,
       true,
-      limit
+      config.dynamodb.stickyEntriesLimit
     );
+
+    const cursor = cueLiveNonStickyEntries?.[limit]?.getSortKeyValue();
+
+    let oppositeCursor;
+    if (cueLiveNonStickyEntries.length) {
+      const filter = cueLiveNonStickyEntries[
+        cueLiveNonStickyEntries.length - 1
+      ]?.getSortKeyValue();
+      const oppositeCursorFilterBefore = after ? filter : undefined;
+      const oppositeCursorFilterAfter = before ? filter : undefined;
+      const oppositeCursorLimit = cueLiveNonStickyEntries.length;
+
+      const response = await dynamodb.getEntries(
+        eventId,
+        oppositeCursorFilterBefore,
+        oppositeCursorFilterAfter,
+        false,
+        oppositeCursorLimit
+      );
+
+      // if cursor present in the result
+      if (response.length > limit)
+        oppositeCursor = response?.[response.length - 1]?.getSortKeyValue();
+    }
+
+    // Remove the cursor from the result if exists
+    if (cursor) {
+      cueLiveNonStickyEntries = cueLiveNonStickyEntries.slice(0, limit);
+    }
+
+    const base64Cursor = cursor
+      ? Buffer.from(cursor).toString('base64')
+      : undefined;
+    const base64OppositeCursor = oppositeCursor
+      ? Buffer.from(oppositeCursor).toString('base64')
+      : undefined;
 
     return {
       entries: cueLiveNonStickyEntries,
       sticky: cueLiveStickyEntries,
+      beforeCursor: before ? base64Cursor : base64OppositeCursor,
+      afterCursor: after ? base64Cursor : base64OppositeCursor,
     };
   }
 
@@ -58,5 +97,25 @@ export class EntryController {
     await cueLiveEntry.save();
 
     return cueLiveEntry;
+  }
+
+  public static paginateAndSort(
+    cueLiveNonStickyEntries: CueLiveEntry[],
+    cueLiveStickyEntries: CueLiveEntry[],
+    before: string,
+    after: string,
+    limit: number
+  ) {}
+
+  public static sortEntries(entries: CueLiveEntry[]) {
+    if (!entries.length) return entries;
+    return entries.sort((a: CueLiveEntry, b: CueLiveEntry) =>
+      // Descending order
+      a.getSortKeyValue() > a.getSortKeyValue()
+        ? -1
+        : a.getSortKeyValue() > a.getSortKeyValue()
+        ? 1
+        : 0
+    );
   }
 }

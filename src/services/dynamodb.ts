@@ -45,17 +45,23 @@ export const putItem = async (item: CueLiveEntry) => {
 
 export const getEntries = async (
   eventId: number,
-  before?: string,
-  after?: string,
+  before: string | undefined,
+  after: string | undefined,
   sticky: boolean = false,
   limit = config.dynamodb.limit
 ): Promise<Array<CueLiveEntry>> => {
+  const ScanIndexForward = !!after && !before;
+  // Sort Key is the concatenation of sticky, publisedDate and id
+  // in order for the before filter to match records with the same publisedDate
+  // we need to append a character to the end of the string which has bigger UTF-8 value than any number
+  // e.g If we want to get the entry with id 99 and sort key 0#1676312802000#99 with a before filter
+  // we have to query like sticky-publishedDate-id <= 0#1676312802000#A (0#1676312802000) wouldn't work
   if (sticky) {
-    before = before ? `1#${before}` : '2#';
-    after = after ? `1#${after}` : '1#';
+    before = before ? `${before}` : '2#';
+    after = after ? `${after}` : '1#';
   } else {
-    before = before ? `0#${before}` : '1#';
-    after = after ? `0#${after}` : '0#';
+    before = before ? `${before}` : '1#';
+    after = after ? `${after}` : '0#';
   }
 
   let KeyConditionExpression = '#pk = :eventId';
@@ -73,18 +79,20 @@ export const getEntries = async (
       new QueryCommand({
         TableName: config.dynamodb.tableName,
         KeyConditionExpression,
-        ScanIndexForward: false,
+        // If only after is specified, then we need to get the entries in ascending order
+        ScanIndexForward,
         ExpressionAttributeValues: marshall(attributesValues),
         ExpressionAttributeNames: {
-          '#pk': 'eventId',
-          '#sk': 'sticky-publishedDate-id',
+          '#pk': CueLiveEntry.pkName,
+          '#sk': CueLiveEntry.skName,
         },
-        Limit: limit,
+        // limit +1 for the cursor
+        Limit: limit + 1,
       })
     );
 
-    return results?.Items?.length
-      ? (results.Items.map(unmarshall) as Array<CueLiveEntry>).map(
+    return results?.Count
+      ? (results?.Items?.map(unmarshall) as Array<CueLiveEntry>).map(
           CueLiveEntry.fromObject
         )
       : [];
@@ -133,7 +141,7 @@ export const deleteEntry = async (eventId: number, id: number) => {
         TableName: config.dynamodb.tableName,
         Key: marshall({
           eventId: cueLiveEntry.eventId,
-          'sticky-publishedDate-id': cueLiveEntry['sticky-publishedDate-id'],
+          [CueLiveEntry.skName]: cueLiveEntry.getSortKeyValue(),
         }),
       })
     );

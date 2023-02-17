@@ -1,16 +1,22 @@
 import { deleteEntry, putItem } from '../services/dynamodb';
 
+const PK_NAME = 'eventId';
+const SK_NAME = 'sticky-publishedDate-id';
 export interface CueLiveEntriesResponse {
-  sticky: Array<CueLiveEntry>;
-  entries: Array<CueLiveEntry>;
+  entries: CueLiveEntry[];
+  sticky: CueLiveEntry[];
+  beforeCursor: string | undefined;
+  afterCursor: string | undefined;
 }
+
 export interface CueLiveEntryFromCook {
   values: Array<Object>;
 }
 export class CueLiveEntry {
+  static pkName = PK_NAME;
+  static skName = SK_NAME;
   // Dynamo Table's Composite Sort Key
-  'sticky-publishedDate-id': string;
-
+  [SK_NAME]: string;
   constructor(
     public id: number,
     public eventId: number,
@@ -32,9 +38,7 @@ export class CueLiveEntry {
     public values?: Array<Object>
   ) {
     // DynamoDb composite sort key
-    this['sticky-publishedDate-id'] = `${
-      sticky ? '1' : '0'
-    }#${publishedDate}#${id}`;
+    this[SK_NAME] = `${sticky ? '1' : '0'}#${publishedDate}#${id}`;
   }
 
   /**
@@ -69,6 +73,10 @@ export class CueLiveEntry {
 
   public isLive(): boolean {
     return this.state === 'published' && this.publishedDate < Date.now();
+  }
+
+  public getSortKeyValue(): string {
+    return this[SK_NAME];
   }
 
   public async save(): Promise<void> {

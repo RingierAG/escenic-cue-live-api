@@ -98,6 +98,7 @@ provider:
     metrics: true
     apiKeys:
       - ${opt:stage}-internal
+      - ${self:custom.prefix}-internal
   iam:
     role:
       statements:
@@ -178,7 +179,7 @@ functions:
     name: ${self:custom.prefix}-fetcher
     description: 'The lambda function serves as an API for the FrontEnds'
     handler: src/handlers/fetcher.handler
-    timeout: 5 # Timeout for this specific function.  Overrides the default set above.
+    timeout: 900 # Timeout for this specific function.  Overrides the default set above.
     tags: # Function specific tags
       Environment: ${self:provider.stage}
       Name: ${self:custom.prefix}-fetcher
@@ -189,6 +190,9 @@ functions:
           method: get
       - http:
           path: '/entry/{eventId}/{id}'
+          method: get
+      - http:
+          path: '/test'
           method: get
 
 resources:
