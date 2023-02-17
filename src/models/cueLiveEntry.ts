@@ -7,6 +7,8 @@ export interface CueLiveEntriesResponse {
   sticky: CueLiveEntry[];
   beforeCursor: string | undefined;
   afterCursor: string | undefined;
+  newest: string;
+  oldest: string;
 }
 
 export interface CueLiveEntryFromCook {
@@ -75,8 +77,10 @@ export class CueLiveEntry {
     return this.state === 'published' && this.publishedDate < Date.now();
   }
 
-  public getSortKeyValue(): string {
-    return this[SK_NAME];
+  public getSortKeyValue(encodeBase64: boolean = false): string {
+    return encodeBase64
+      ? Buffer.from(this[SK_NAME]).toString('base64')
+      : this[SK_NAME];
   }
 
   public async save(): Promise<void> {

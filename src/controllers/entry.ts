@@ -13,17 +13,42 @@ import { Cook } from '../helpers/cook';
 export class EntryController {
   static async fetchEntries(
     eventId: number,
-    before: string,
-    after: string,
-    limit: number
+    beforeOrAfterFilter: string | undefined,
+    limit: number,
+    isBeforeQuery: boolean
   ): Promise<CueLiveEntriesResponse> {
+    const filter = beforeOrAfterFilter || undefined;
+    const oppositeCursorFilterBefore = isBeforeQuery ? undefined : filter;
+    const oppositeCursorFilterAfter = isBeforeQuery ? filter : undefined;
+    const oppositeCursorFilterLimit = 1;
+
     let cueLiveNonStickyEntries = await dynamodb.getEntries(
       eventId,
-      before,
-      after,
+      isBeforeQuery ? filter : undefined,
+      isBeforeQuery ? undefined : filter,
       false,
-      limit
+      limit + 1 // +1 for the cursor
     );
+
+    const cursor =
+      cueLiveNonStickyEntries.length > limit
+        ? cueLiveNonStickyEntries?.pop()?.getSortKeyValue(true)
+        : undefined;
+
+    // Fetching 2 entries on the opposite direction
+    const oppositeCursorResponse = beforeOrAfterFilter
+      ? await dynamodb.getEntries(
+          eventId,
+          oppositeCursorFilterBefore,
+          oppositeCursorFilterAfter,
+          false,
+          oppositeCursorFilterLimit + 1
+        )
+      : [];
+
+    const oppositeCursor = oppositeCursorResponse?.[
+      oppositeCursorFilterLimit
+    ]?.getSortKeyValue(true);
 
     const cueLiveStickyEntries = await dynamodb.getEntries(
       eventId,
@@ -32,48 +57,20 @@ export class EntryController {
       true,
       config.dynamodb.stickyEntriesLimit
     );
+    cueLiveNonStickyEntries.sort(EntryController.sort);
 
-    const cursor = cueLiveNonStickyEntries?.[limit]?.getSortKeyValue();
-
-    let oppositeCursor;
-    if (cueLiveNonStickyEntries.length) {
-      const filter = cueLiveNonStickyEntries[
-        cueLiveNonStickyEntries.length - 1
-      ]?.getSortKeyValue();
-      const oppositeCursorFilterBefore = after ? filter : undefined;
-      const oppositeCursorFilterAfter = before ? filter : undefined;
-      const oppositeCursorLimit = cueLiveNonStickyEntries.length;
-
-      const response = await dynamodb.getEntries(
-        eventId,
-        oppositeCursorFilterBefore,
-        oppositeCursorFilterAfter,
-        false,
-        oppositeCursorLimit
-      );
-
-      // if cursor present in the result
-      if (response.length > limit)
-        oppositeCursor = response?.[response.length - 1]?.getSortKeyValue();
-    }
-
-    // Remove the cursor from the result if exists
-    if (cursor) {
-      cueLiveNonStickyEntries = cueLiveNonStickyEntries.slice(0, limit);
-    }
-
-    const base64Cursor = cursor
-      ? Buffer.from(cursor).toString('base64')
-      : undefined;
-    const base64OppositeCursor = oppositeCursor
-      ? Buffer.from(oppositeCursor).toString('base64')
-      : undefined;
+    const newest = cueLiveNonStickyEntries?.[0].getSortKeyValue(true);
+    const oldest = cueLiveNonStickyEntries?.[
+      cueLiveNonStickyEntries.length - 1
+    ].getSortKeyValue(true);
 
     return {
       entries: cueLiveNonStickyEntries,
       sticky: cueLiveStickyEntries,
-      beforeCursor: before ? base64Cursor : base64OppositeCursor,
-      afterCursor: after ? base64Cursor : base64OppositeCursor,
+      beforeCursor: isBeforeQuery ? cursor : oppositeCursor,
+      afterCursor: isBeforeQuery ? oppositeCursor : cursor,
+      newest,
+      oldest,
     };
   }
 
@@ -99,23 +96,11 @@ export class EntryController {
     return cueLiveEntry;
   }
 
-  public static paginateAndSort(
-    cueLiveNonStickyEntries: CueLiveEntry[],
-    cueLiveStickyEntries: CueLiveEntry[],
-    before: string,
-    after: string,
-    limit: number
-  ) {}
-
-  public static sortEntries(entries: CueLiveEntry[]) {
-    if (!entries.length) return entries;
-    return entries.sort((a: CueLiveEntry, b: CueLiveEntry) =>
-      // Descending order
-      a.getSortKeyValue() > a.getSortKeyValue()
-        ? -1
-        : a.getSortKeyValue() > a.getSortKeyValue()
-        ? 1
-        : 0
-    );
-  }
+  public static sort = (a: CueLiveEntry, b: CueLiveEntry) =>
+    // Descending order
+    a.getSortKeyValue() > b.getSortKeyValue()
+      ? -1
+      : a.getSortKeyValue() < b.getSortKeyValue()
+      ? 1
+      : 0;
 }

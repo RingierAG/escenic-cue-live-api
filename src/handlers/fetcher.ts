@@ -60,11 +60,12 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
       return await respondSuccess(entry);
     }
 
+    const isBeforeQuery = !after;
     const cueLiveEntries = await EntryController.fetchEntries(
       eventId,
-      before,
-      after,
-      limit
+      before || after,
+      limit,
+      isBeforeQuery
     );
 
     return await respondSuccess(cueLiveEntries);

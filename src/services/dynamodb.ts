@@ -86,8 +86,7 @@ export const getEntries = async (
           '#pk': CueLiveEntry.pkName,
           '#sk': CueLiveEntry.skName,
         },
-        // limit +1 for the cursor
-        Limit: limit + 1,
+        Limit: limit,
       })
     );
 
