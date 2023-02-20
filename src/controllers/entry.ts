@@ -59,10 +59,10 @@ export class EntryController {
     );
     cueLiveNonStickyEntries.sort(EntryController.sort);
 
-    const newest = cueLiveNonStickyEntries?.[0].getSortKeyValue(true);
+    const newest = cueLiveNonStickyEntries?.[0]?.getSortKeyValue(true);
     const oldest = cueLiveNonStickyEntries?.[
       cueLiveNonStickyEntries.length - 1
-    ].getSortKeyValue(true);
+    ]?.getSortKeyValue(true);
 
     return {
       entries: cueLiveNonStickyEntries,
