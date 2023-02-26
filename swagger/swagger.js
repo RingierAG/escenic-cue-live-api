@@ -13,7 +13,22 @@ module.exports = {
         operationId: 'listener.post./entry',
         consumes: ['application/json'],
         produces: ['application/json'],
-        parameters: [],
+        security: [
+          {
+            Authorization: [],
+          },
+        ],
+        parameters: [
+          {
+            in: 'body',
+            name: 'body',
+            description: 'Body required in the request',
+            required: true,
+            schema: {
+              $ref: '#/definitions/CueLiveEntryFromEngine',
+            },
+          },
+        ],
         responses: {
           '200': {
             description: '200 response',
@@ -28,6 +43,11 @@ module.exports = {
         operationId: 'fetcher.get./entries/{eventId}',
         consumes: ['application/json'],
         produces: ['application/json'],
+        security: [
+          {
+            Authorization: [],
+          },
+        ],
         parameters: [
           {
             name: 'eventId',
@@ -76,6 +96,11 @@ module.exports = {
         operationId: 'fetcher.get./entry/{eventId}/{id}',
         consumes: ['application/json'],
         produces: ['application/json'],
+        security: [
+          {
+            Authorization: [],
+          },
+        ],
         parameters: [
           {
             name: 'eventId',
@@ -110,6 +135,11 @@ module.exports = {
         operationId: 'fetcher.get./test',
         consumes: ['application/json'],
         produces: ['application/json'],
+        security: [
+          {
+            Authorization: [],
+          },
+        ],
         parameters: [],
         responses: {
           '200': {
@@ -173,6 +203,10 @@ module.exports = {
           title: 'CueLiveEntriesResponse.oldest',
           type: 'string',
         },
+        refreshRate: {
+          title: 'CueLiveEntriesResponse.refreshRate',
+          type: 'number',
+        },
       },
       required: [
         'entries',
@@ -181,6 +215,7 @@ module.exports = {
         'nextCursor',
         'newest',
         'oldest',
+        'refreshRate',
       ],
       additionalProperties: false,
       title: 'CueLiveEntriesResponse',
@@ -234,6 +269,11 @@ module.exports = {
       type: 'object',
     },
   },
-  securityDefinitions: {},
-  basePath: '/test',
+  securityDefinitions: {
+    Authorization: {
+      type: 'apiKey',
+      name: 'Authorization',
+      in: 'header',
+    },
+  },
 };
