@@ -1,12 +1,12 @@
-'use strict';
+"use strict";
 exports.handler = async () => {
-  return {
-    statusCode: 200,
-    body: redirectUI,
-    headers: {
-      'content-type': 'text/html',
-    },
-  };
+    return {
+        statusCode: 200,
+        body: redirectUI,
+        headers: {
+            'content-type': 'text/html',
+        },
+    };
 };
 // copied from view-source:https://unpkg.com/swagger-ui-dist@4.5.0/oauth2-redirect.html
 const redirectUI = `<!doctype html>

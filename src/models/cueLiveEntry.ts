@@ -23,6 +23,11 @@ export interface CueLiveEntryResponse {
   author: any;
   eTag: string;
   values?: Widget[];
+
+  // TODO: Delete after cook is live
+  body: string;
+  // TODO: Delete after cook is live
+  title: string;
 }
 export interface CueLiveEntryFromCook {
   values: Widget[];
@@ -87,7 +92,7 @@ export class CueLiveEntry {
   }
 
   public toResponse(): CueLiveEntryResponse {
-    const { id, eventId, author, eTag, values } = this;
+    const { id, eventId, author, eTag, values, body, title } = this;
 
     return {
       id,
@@ -95,6 +100,10 @@ export class CueLiveEntry {
       author,
       eTag,
       values,
+
+      //todo Delete after cook is ready
+      body,
+      title,
     };
   }
 
