@@ -17,8 +17,8 @@ import { EntryController } from '../controllers/entry';
 const schemas = {
   entries: Joi.object({
     eventId: Joi.number().required(),
-    before: Joi.string().base64(),
-    after: Joi.string().base64(),
+    before: Joi.string().base64({ paddingRequired: false }),
+    after: Joi.string().base64({ paddingRequired: false }),
     limit: Joi.number().default(config.dynamodb.limit),
   }).unknown(),
   entry: Joi.object({

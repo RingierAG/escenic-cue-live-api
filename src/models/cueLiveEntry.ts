@@ -14,6 +14,7 @@ export interface CueLiveEntriesResponse {
   nextCursor: string | undefined;
   newest: string;
   oldest: string;
+  refreshRate: number;
 }
 
 export interface CueLiveEntryResponse {
@@ -23,7 +24,6 @@ export interface CueLiveEntryResponse {
   eTag: string;
   values?: Widget[];
 }
-
 export interface CueLiveEntryFromCook {
   values: Widget[];
 }
@@ -104,7 +104,9 @@ export class CueLiveEntry {
 
   public getSortKeyValue(encodeBase64: boolean = false): string {
     return encodeBase64
-      ? Buffer.from(this[SK_NAME]).toString('base64')
+      ? Buffer.from(this[SK_NAME])
+          .toString('base64')
+          .replace(/=+$/, '')
       : this[SK_NAME];
   }
 

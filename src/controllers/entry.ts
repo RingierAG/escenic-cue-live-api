@@ -9,6 +9,7 @@ import * as dynamodb from '../services/dynamodb';
 import { CueLiveEntriesResponse, CueLiveEntry } from '../models/cueLiveEntry';
 import { CueLiveEntryQueueRecord } from '../models/sqs-records';
 import { Cook } from '../helpers/cook';
+import { Constants } from '../utils/constants';
 
 export class EntryController {
   static async fetchEntries(
@@ -71,7 +72,34 @@ export class EntryController {
       nextCursor: isBeforeQuery ? oppositeCursor : cursor,
       newest,
       oldest,
+      refreshRate: EntryController.calculateRefreshRate(
+        cueLiveNonStickyEntries?.[0]?.lastModifiedDate
+      ),
     };
+  }
+
+  /**
+   * This function calculates the time difference between the input date
+   * and the current time in seconds. It then calculates the number of 15-minute intervals
+   * between the two dates and adds 5 seconds for each interval (at most 1 hour).
+   * If the time difference is less than 10 minutes, it returns the minimum refresh rate
+   */
+  static calculateRefreshRate(inputDate: number) {
+    if (!inputDate) return Constants.DEFAULT_MAX_REFRESH_RATE;
+
+    const now = Date.now();
+    const timeDiff = Math.abs(now - inputDate) / 1000;
+    const fiveMinutesInSeconds = 5 * 60;
+    const secondsToAdd = Math.min(
+      Math.abs(timeDiff / fiveMinutesInSeconds) * 5,
+      Constants.DEFAULT_MAX_REFRESH_RATE
+    );
+
+    if (timeDiff < fiveMinutesInSeconds) {
+      return Constants.DEFAULT_MIN_REFRESH_RATE;
+    } else {
+      return Constants.DEFAULT_MIN_REFRESH_RATE + secondsToAdd;
+    }
   }
 
   static async fetchEntry(eventId: number, id: number) {
