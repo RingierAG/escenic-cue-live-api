@@ -65,10 +65,10 @@ export class EntryController {
     ]?.getSortKeyValue(true);
 
     return {
-      entries: cueLiveNonStickyEntries,
-      sticky: cueLiveStickyEntries,
-      beforeCursor: isBeforeQuery ? cursor : oppositeCursor,
-      afterCursor: isBeforeQuery ? oppositeCursor : cursor,
+      entries: cueLiveNonStickyEntries.map((entry) => entry.toResponse()),
+      sticky: cueLiveStickyEntries.map((entry) => entry.toResponse()),
+      previousCursor: isBeforeQuery ? cursor : oppositeCursor,
+      nextCursor: isBeforeQuery ? oppositeCursor : cursor,
       newest,
       oldest,
     };

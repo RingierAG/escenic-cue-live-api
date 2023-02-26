@@ -2,17 +2,30 @@ import { deleteEntry, putItem } from '../services/dynamodb';
 
 const PK_NAME = 'eventId';
 const SK_NAME = 'sticky-publishedDate-id';
+
+export interface Widget {
+  kind: string[];
+  text?: any;
+}
 export interface CueLiveEntriesResponse {
-  entries: CueLiveEntry[];
-  sticky: CueLiveEntry[];
-  beforeCursor: string | undefined;
-  afterCursor: string | undefined;
+  entries: CueLiveEntryResponse[];
+  sticky: CueLiveEntryResponse[];
+  previousCursor: string | undefined;
+  nextCursor: string | undefined;
   newest: string;
   oldest: string;
 }
 
+export interface CueLiveEntryResponse {
+  id: number;
+  eventId: number;
+  author: any;
+  eTag: string;
+  values?: Widget[];
+}
+
 export interface CueLiveEntryFromCook {
-  values: Array<Object>;
+  values: Widget[];
 }
 export class CueLiveEntry {
   static pkName = PK_NAME;
@@ -22,14 +35,14 @@ export class CueLiveEntry {
   constructor(
     public id: number,
     public eventId: number,
-    public author: Object,
-    public creator: Object,
+    public author: any,
+    public creator: any,
     public createdDate: number,
     public publishedDate: number,
     public lastModifiedDate: number,
     public eTag: string,
     public state: string,
-    public tags: Array<Object>,
+    public tags: Array<any>,
     public sticky: Boolean,
     public editable: Boolean,
     public deletable: Boolean,
@@ -37,7 +50,7 @@ export class CueLiveEntry {
     public body: string,
     // TODO: Delete after cook is live
     public title: string,
-    public values?: Array<Object>
+    public values?: Widget[]
   ) {
     // DynamoDb composite sort key
     this[SK_NAME] = `${sticky ? '1' : '0'}#${publishedDate}#${id}`;
@@ -71,6 +84,18 @@ export class CueLiveEntry {
     );
 
     return cueLiveEntry;
+  }
+
+  public toResponse(): CueLiveEntryResponse {
+    const { id, eventId, author, eTag, values } = this;
+
+    return {
+      id,
+      eventId,
+      author,
+      eTag,
+      values,
+    };
   }
 
   public isLive(): boolean {

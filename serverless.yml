@@ -4,6 +4,7 @@ variablesResolutionMode: 20210326
 configValidationMode: error
 
 plugins:
+  - serverless-auto-swagger
   - serverless-plugin-aws-alerts
   - serverless-dynamodb-local
   - serverless-plugin-typescript
@@ -15,7 +16,9 @@ custom:
   prefix: ${self:custom.env}-${self:custom.proj}-${self:service}
   queueName: ${self:custom.prefix}
   dynamodbTableName: ${self:custom.prefix}-entries-table
- 
+  autoswagger:
+    typefiles: ['src/models/cueLiveEntry.ts']
+    basePath: /${opt:stage,'stg'}
   dynamoTableName:
     ${self:custom.dynamodbTableName}
     # domains
@@ -188,9 +191,33 @@ functions:
       - http:
           path: '/entries/{eventId}'
           method: get
+          queryStringParameters:
+            before:
+              description: "filters the output to entries published before a certain cursor/pointer"
+              type: string
+              required: false
+            after:
+              description: "filters the output to entries published after a certain cursor/pointer"
+              type: string
+              required: false
+            limit:
+              description: "limits the size of the output (default 10)"
+              type: string
+              required: false
+          responseData:
+            200:
+              description: "Array of event entries"
+              bodyType: 'CueLiveEntriesResponse'
       - http:
           path: '/entry/{eventId}/{id}'
           method: get
+          responseData:
+            200:
+              description: "An Event Entry"
+              bodyType: 'CueLiveEntryResponse'
+            404:
+              description: "Entry not found"
+              bodyType: ''
       - http:
           path: '/test'
           method: get
